@@ -1,8 +1,8 @@
-#include <cstdio>
+#define WIN32_LEAN_AND_MEAN
+
 #include <errhandlingapi.h>
 #include <fileapi.h>
 #include <iostream>
-#include <minwindef.h>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -291,19 +291,6 @@ int main() {
                                    .buffer = std::vector<BYTE>(4096),
                                    .directoryPath = LogPath};
 
-      BOOL result =
-          ReadDirectoryChangesW(state->hDirectory, state->buffer.data(),
-                                static_cast<DWORD>(state->buffer.size()), TRUE,
-                                FILE_NOTIFY_CHANGE_LAST_WRITE, NULL,
-                                &state->overlapped, ChangeCallback);
-
-      if (!result) {
-        std::wcerr << L"Failed to start watch. Error Code: " << GetLastError()
-                   << std::endl;
-        delete state;
-        return GetLastError();
-      }
-
       HANDLE hLogFile =
           CreateFileW(LogContentPath.c_str(), GENERIC_READ,
                       FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
@@ -340,8 +327,21 @@ int main() {
         }
         CloseHandle(hLogFile);
       } else {
-        std::wcout << L"No existing log file found, waiting for changes..."
+        std::wcout << L"Unable to open log file, exiting..." << std::endl;
+        return 0;
+      }
+
+      BOOL result =
+          ReadDirectoryChangesW(state->hDirectory, state->buffer.data(),
+                                static_cast<DWORD>(state->buffer.size()), TRUE,
+                                FILE_NOTIFY_CHANGE_LAST_WRITE, NULL,
+                                &state->overlapped, ChangeCallback);
+
+      if (!result) {
+        std::wcerr << L"Failed to start watch. Error Code: " << GetLastError()
                    << std::endl;
+        delete state;
+        return GetLastError();
       }
 
       std::wcout << L"Waiting for changes..." << std::endl;
