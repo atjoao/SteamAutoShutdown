@@ -3,7 +3,7 @@ detectar quando steam acaba o download e desligar o computador
 
 # Compilar
 
-`c++ main.cpp -O3 -o sas.exe`
+`c++ -static -shared -O3 main.cpp -o sas.exe`
 
 # Abrir
 
